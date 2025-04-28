@@ -5,6 +5,7 @@ public class TriestBase implements DataStreamAlgo {
 	// TO-DO
 	// - check flipCoin() functionality
 	// - check updateCounters functionality (what are the additional counters?)
+	// - find neighbors more efficiently
 	
 	private int globaltri; // tau 	
 	private final int samsize; // M
@@ -21,7 +22,7 @@ public class TriestBase implements DataStreamAlgo {
 		this.globaltri = 0;
 		this.samsize = samsize;
 		this.sample = new Edge[samsize];
-		this.sidx = 0;
+		this.sidx = -1;
 		this.time = 0;
 	}
 	
@@ -35,6 +36,7 @@ public class TriestBase implements DataStreamAlgo {
 
 	private boolean sampleEdge(Edge edge) {
 		if(this.time <= this.samsize) {
+			sidx++;
 			return true;
 		} else if(this.flipCoin() == 1) {
 			// if tails, choose sample edge to remove (insert over)
@@ -48,23 +50,30 @@ public class TriestBase implements DataStreamAlgo {
 
 	// add: op = 0, remove: op = 1
 	private void updateCounters(Edge edge, int op) {
-		// compute neighborhood in sample (union of u, v neighbors)
-		HashSet<Integer> neighbors = new HashSet<>();
+		// compute neighborhood in sample
+		HashSet<Integer> uneighbors = new HashSet<>();
+		HashSet<Integer> vneighbors = new HashSet<>();
 		int u = edge.u;
 		int v = edge.v;
 		for(int i = 0; i < sample.length; i++) {
+			if(this.sample[i] == null) {break;}
 			int su = this.sample[i].u;
 			int sv = this.sample[i].v;
-			if(su == u || su == v) {
-				neighbors.add(sv);
-			} else if(sv == u || sv == v) {
-				neighbors.add(su);
+			if(su == u) {uneighbors.add(sv);}
+			if(sv == u) {uneighbors.add(su);}
+			if(su == v) {vneighbors.add(sv);}
+			if(sv == v) {vneighbors.add(su);}
+		}
+		int intersection = 0;
+		for(int n : uneighbors) {
+			if(vneighbors.contains(n)) {
+				intersection++;
 			}
 		}
 		if(op == 0) {
-			this.globaltri += neighbors.size();
+			this.globaltri += intersection;
 		} else if (op == 1) {
-			this.globaltri -= neighbors.size();
+			this.globaltri -= intersection;
 		}
 	}
 
@@ -72,7 +81,9 @@ public class TriestBase implements DataStreamAlgo {
 	// heads = 0, tails = 1
 	private int flipCoin() {
 		// tail-bias M/t
-		if(Math.random() <= ((double)this.samsize / this.time)) {
+		double rand = Math.random();
+		double thres = (double)this.samsize / this.time;
+		if(rand <= thres) {
 			return 1;
 		} else {
 			return 0;
@@ -80,6 +91,16 @@ public class TriestBase implements DataStreamAlgo {
 	}
 
 	public int getEstimate() {
-	       	return this.globaltri; 
+	    return this.globaltri; 
 	} 
+
+	public String toString() {
+		String str = "";
+		for(int i = 0; i < sample.length; i++) {
+			if(sample[i] == null) {break;}
+			str += sample[i].toString() + "    ";
+		}
+		return str;
+	}
+	
 }
