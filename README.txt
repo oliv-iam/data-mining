@@ -1,5 +1,5 @@
 Projects for COSC-254 Data Mining
-- Frequent items
+- Exact and approximate frequent items
 - Frequent itemsets in MapReduce
-- Triangle counting
+- Triangle counting in data streams
 - 
