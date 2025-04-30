@@ -3,9 +3,7 @@ import java.util.HashSet;
 public class TriestBase implements DataStreamAlgo {
 
 	// TO-DO
-	// - check flipCoin() functionality
-	// - check updateCounters functionality (what are the additional counters?)
-	// - find neighbors more efficiently
+	// - find neighbors more efficiently (save previously computed values?)
 	
 	private int globaltri; // tau 	
 	private final int samsize; // M
@@ -91,7 +89,18 @@ public class TriestBase implements DataStreamAlgo {
 	}
 
 	public int getEstimate() {
-	    return this.globaltri; 
+		if(this.time < this.samsize) {
+			return this.globaltri; 
+		} else {
+			// simplify pi to (M)(M-1)(M-2) / (t)(t-1)(t-2)
+			double t = (double)this.time;
+			double M = (double)this.sample.length;
+			double left = M / t;
+			double center = (M-1) / (t-1);
+			double right = (M-2) / (t-2);
+			double pi = left * center * right;
+			return (int)(this.globaltri / pi);
+		}
 	} 
 
 	public String toString() {
